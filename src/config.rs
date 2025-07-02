@@ -26,12 +26,15 @@ pub struct ScanConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryConfig {
-    pub ping_timeout: u64, // milliseconds
-    pub port_scan_timeout: u64, // milliseconds
-    pub tcp_connect_timeout: u64, // milliseconds
-    pub udp_timeout: Duration, // milliseconds
-    pub common_ports: Vec<u16>,
-    pub top_ports: Vec<u16>,
+    pub tcp_timeout: Duration,
+    pub udp_timeout: Duration,
+    pub ping_timeout: Duration,
+    pub preferred_strategy: Option<String>,
+    pub force_icmp: bool,
+    pub enable_arp: bool,
+    pub system_ping_fallback: bool,
+    pub priority_tcp_ports: Vec<u16>,
+    pub common_tcp_ports: Vec<u16>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,15 +116,18 @@ impl Default for Config {
                 user_agent: "Rscan/1.0".to_string(),
             },
             discovery: DiscoveryConfig {
-                ping_timeout: 1000,
-                port_scan_timeout: 3000,
-                tcp_connect_timeout: 5000,
+                tcp_timeout: Duration::from_millis(5000),
                 udp_timeout: Duration::from_millis(2000),
-                common_ports: vec![
+                ping_timeout: Duration::from_millis(1000),
+                preferred_strategy: None,
+                force_icmp: false,
+                enable_arp: false,
+                system_ping_fallback: false,
+                priority_tcp_ports: vec![
                     21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 993, 995, 1723, 3306, 3389, 5432, 5900, 8080
                 ],
-                top_ports: vec![
-                    1, 3, 4, 6, 7, 9, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 30, 32, 33, 37, 42, 43, 49, 53, 70, 79, 80, 81, 82, 83, 84, 85, 88, 89, 90, 99, 100, 106, 109, 110, 111, 113, 119, 125, 135, 139, 143, 144, 146, 161, 163, 179, 199, 211, 212, 222, 254, 255, 256, 259, 264, 280, 301, 306, 311, 340, 366, 389, 406, 407, 416, 417, 425, 427, 443, 444, 445, 458, 464, 465, 481, 497, 500, 512, 513, 514, 515, 524, 541, 543, 544, 545, 548, 554, 555, 563, 587, 593, 616, 617, 625, 631, 636, 646, 648, 666, 667, 668, 683, 687, 691, 700, 705, 711, 714, 720, 722, 726, 749, 765, 777, 783, 787, 800, 801, 808, 843, 873, 880, 888, 898, 900, 901, 902, 903, 911, 912, 981, 987, 990, 992, 993, 995, 999, 1000, 1001, 1002, 1007, 1009, 1010, 1011, 1021, 1022, 1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099, 1100
+                common_tcp_ports: vec![
+                    21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 993, 995, 1723, 3306, 3389, 5432, 5900, 8080
                 ],
             },
             brute_force: BruteForceConfig {
@@ -213,15 +219,15 @@ impl Config {
     }
 
     pub fn ping_timeout(&self) -> Duration {
-        Duration::from_millis(self.discovery.ping_timeout)
+        self.discovery.ping_timeout
     }
 
     pub fn port_scan_timeout(&self) -> Duration {
-        Duration::from_millis(self.discovery.port_scan_timeout)
+        self.discovery.tcp_timeout
     }
 
     pub fn tcp_connect_timeout(&self) -> Duration {
-        Duration::from_millis(self.discovery.tcp_connect_timeout)
+        self.discovery.tcp_timeout
     }
 
     pub fn brute_force_delay(&self) -> Duration {

@@ -21,6 +21,7 @@ pub mod evasion;
 pub mod display;
 pub mod utils;
 pub mod error;
+pub mod platform;
 
 pub use error::{Result, ScanError};
 

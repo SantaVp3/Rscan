@@ -6,9 +6,15 @@ authors = ["Rscan Team"]
 description = "Comprehensive internal network scanning tool for vulnerability assessment"
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/your-org/rscan"
+repository = "https://github.com/SantaVp3/Rscan"
 keywords = ["security", "network", "scanner", "vulnerability", "penetration-testing"]
 categories = ["command-line-utilities", "network-programming"]
+
+# 构建配置
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
 
 [dependencies]
 # Async runtime and utilities
@@ -17,29 +23,26 @@ futures = "0.3"
 async-trait = "0.1"
 
 # Networking and proxy support
-socket2 = "0.5"
+socket2 = { version = "0.5", features = ["all"] }
 trust-dns-resolver = "0.23"
 pnet = "0.34"
-surge-ping = "0.8"
-reqwest = { version = "0.11", features = ["json", "stream", "socks"] }
+ping = "0.5"  # 简单ping实现，支持DGRAM socket，Windows友好
+# tokio-ping = "0.4"  # 移除，版本不存在
+# fastping = "0.2"  # 移除，不存在的crate
+if-addrs = "0.10"  # 网络接口枚举
+
+# HTTP/Web scanning
+reqwest = { version = "0.11", features = ["json", "stream", "socks", "native-tls", "rustls-tls"] }
 hyper = { version = "0.14", features = ["full"] }
 hyper-proxy = "0.9"
 hyper-tls = "0.5"
-
-# Randomization and timing
-fastrand = "2.0"
-parking_lot = "0.12"
-
-# HTTP/Web scanning
+tokio-socks = "0.5"
 scraper = "0.18"
 url = "2.4"
 urlencoding = "2.1"
 
 # SSH and protocol implementations
-ssh2 = "0.9"
-# async-ssh2-tokio = "0.8"  # Will use ssh2 directly
-# russh = "0.40"  # Alternative SSH implementation
-# russh-keys = "0.40"
+ssh2 = { version = "0.9", features = ["vendored-openssl"] }
 
 # Database connections
 mysql_async = "0.34"
@@ -47,19 +50,22 @@ tokio-postgres = "0.7"
 redis = { version = "0.24", features = ["tokio-comp"] }
 tiberius = "0.12"
 
-# Additional protocol implementations
-tokio-native-tls = "0.3"
-native-tls = "0.2"
+# TLS support with better cross-platform compatibility
+tokio-native-tls = { version = "0.3", optional = true }
+native-tls = { version = "0.2", features = ["vendored"], optional = true }
+rustls = { version = "0.21", optional = true }
+rustls-pemfile = { version = "1.0", optional = true }
 
 # Crypto and hashing
 md5 = "0.7"
+sha1 = "0.10"
+sha2 = "0.10"
 
 # Additional utilities
 lazy_static = "1.4"
 colored = "2.0"
-
-# SMB/CIFS (using alternative crate)
-# ntlm = "0.3"  # Not available, will implement basic SMB detection
+fastrand = "2.0"
+parking_lot = "0.12"
 
 # Serialization and data formats
 serde = { version = "1.0", features = ["derive"] }
@@ -68,7 +74,7 @@ csv = "1.3"
 toml = "0.8"
 
 # CLI and configuration
-clap = { version = "4.4", features = ["derive", "env"] }
+clap = { version = "4.4", features = ["derive", "env", "unicode", "color"] }
 config = "0.13"
 env_logger = "0.10"
 log = "0.4"
@@ -77,7 +83,7 @@ log = "0.4"
 anyhow = "1.0"
 thiserror = "1.0"
 uuid = { version = "1.6", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { version = "0.4", features = ["serde", "std"] }
 regex = "1.10"
 base64 = "0.21"
 hex = "0.4"
@@ -88,10 +94,70 @@ crossterm = "0.27"
 # Security and cryptography
 ring = "0.17"
 
+# 跨平台文件系统支持
+tempfile = "3.8"
+
+# 系统信息
+hostname = "0.3"
+
 # Windows-specific dependencies
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winnt", "winsock2", "ws2def", "ws2ipdef"] }
+winapi = { version = "0.3", features = [
+    "winnt", 
+    "winsock2", 
+    "ws2def", 
+    "ws2ipdef", 
+    "iphlpapi",
+    "netioapi",
+    "processthreadsapi",
+    "handleapi",
+    "errhandlingapi"
+] }
+windows-sys = { version = "0.48", features = [
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_Networking_WinSock"
+] }
+
+# Linux-specific dependencies
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+
+# macOS-specific dependencies
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"
+core-foundation = "0.9"
+system-configuration = "0.5"
+
+# Unix-like systems (Linux, macOS, BSD)
+[target.'cfg(unix)'.dependencies]
+nix = "0.27"
 
 [dev-dependencies]
 tempfile = "3.8"
 mockito = "1.2"
+tokio-test = "0.4"
+
+# 构建脚本配置
+[build-dependencies]
+cc = "1.0"
+
+# 特性配置
+[features]
+default = ["native-tls-backend"]
+native-tls-backend = ["native-tls", "tokio-native-tls"]
+rustls-backend = ["rustls", "rustls-pemfile"]
+vendored-openssl = ["ssh2/vendored-openssl"]
+
+# 目标特定配置
+[target.'cfg(windows)'.build-dependencies]
+cc = "1.0"
+winres = "0.1"
+
+# Linux构建优化
+[target.'cfg(target_os = "linux")'.build-dependencies]
+pkg-config = "0.3"
+
+# 系统命令包装器  
+subprocess = "0.2"
