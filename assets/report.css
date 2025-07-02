@@ -1,0 +1,310 @@
+/* Rscan HTML Report Styles */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    margin: 0 0 15px 0;
+    font-size: 2.5em;
+    font-weight: 300;
+}
+
+.header p {
+    margin: 5px 0;
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.section {
+    background: white;
+    margin-bottom: 25px;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.section h2 {
+    color: #2c3e50;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+    margin-top: 0;
+    font-size: 1.8em;
+}
+
+.section h3 {
+    color: #34495e;
+    margin-top: 25px;
+    font-size: 1.4em;
+}
+
+.section h4 {
+    color: #7f8c8d;
+    margin-top: 20px;
+    font-size: 1.2em;
+}
+
+/* Vulnerability Summary Table */
+.vuln-summary {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.vuln-summary th,
+.vuln-summary td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.vuln-summary th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.vuln-summary tr.critical {
+    background-color: #fdf2f2;
+    border-left: 4px solid #e74c3c;
+}
+
+.vuln-summary tr.high {
+    background-color: #fef9e7;
+    border-left: 4px solid #f39c12;
+}
+
+.vuln-summary tr.medium {
+    background-color: #f0f8ff;
+    border-left: 4px solid #3498db;
+}
+
+.vuln-summary tr.low {
+    background-color: #f8fff8;
+    border-left: 4px solid #27ae60;
+}
+
+.vuln-summary tr.info {
+    background-color: #f8f9fa;
+    border-left: 4px solid #95a5a6;
+}
+
+/* Vulnerability Details */
+.vulnerability {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #e74c3c;
+}
+
+.vulnerability h3 {
+    margin-top: 0;
+    color: #c0392b;
+    font-size: 1.3em;
+}
+
+.vulnerability p {
+    margin: 8px 0;
+}
+
+.vulnerability strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Target Information */
+.target {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3498db;
+}
+
+.target h3 {
+    margin-top: 0;
+    color: #2980b9;
+    font-size: 1.3em;
+}
+
+.target ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.target li {
+    background: white;
+    margin: 5px 0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid #27ae60;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+/* Severity Colors */
+.critical {
+    color: #e74c3c !important;
+    font-weight: bold;
+}
+
+.high {
+    color: #f39c12 !important;
+    font-weight: bold;
+}
+
+.medium {
+    color: #3498db !important;
+    font-weight: bold;
+}
+
+.low {
+    color: #27ae60 !important;
+    font-weight: bold;
+}
+
+.info {
+    color: #95a5a6 !important;
+}
+
+/* Code and Technical Information */
+code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+pre {
+    background: #f4f4f4;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    border-left: 4px solid #3498db;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 2em;
+    }
+    
+    .section {
+        padding: 15px;
+    }
+    
+    .vuln-summary {
+        font-size: 0.9em;
+    }
+    
+    .vuln-summary th,
+    .vuln-summary td {
+        padding: 8px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .header {
+        background: #2c3e50 !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .section {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .vulnerability,
+    .target {
+        break-inside: avoid;
+    }
+}
+
+/* Animations */
+.section {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.p-10 {
+    padding: 10px;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.italic {
+    font-style: italic;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+    font-size: 0.9em;
+    border-top: 1px solid #ecf0f1;
+    margin-top: 40px;
+}

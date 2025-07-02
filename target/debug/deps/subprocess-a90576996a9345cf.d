@@ -1,0 +1,12 @@
+/Users/db/Desktop/Santa/Project/Rscan/target/debug/deps/libsubprocess-a90576996a9345cf.rmeta: /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/lib.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/builder.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/communicate.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/popen.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/posix.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/os_common.rs
+
+/Users/db/Desktop/Santa/Project/Rscan/target/debug/deps/libsubprocess-a90576996a9345cf.rlib: /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/lib.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/builder.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/communicate.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/popen.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/posix.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/os_common.rs
+
+/Users/db/Desktop/Santa/Project/Rscan/target/debug/deps/subprocess-a90576996a9345cf.d: /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/lib.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/builder.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/communicate.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/popen.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/posix.rs /Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/os_common.rs
+
+/Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/lib.rs:
+/Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/builder.rs:
+/Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/communicate.rs:
+/Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/popen.rs:
+/Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/posix.rs:
+/Users/db/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subprocess-0.2.9/src/os_common.rs:

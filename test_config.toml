@@ -1,0 +1,43 @@
+[scan]
+threads = 50
+timeout = 30
+rate_limit = 50
+
+[discovery]
+ping_timeout = 1000
+udp_timeout = 2000
+dns_timeout = 5000
+
+[brute_force]
+max_attempts = 100
+delay_between_attempts = 100
+timeout = 10000
+
+[web_scan]
+user_agent = "Rscan/1.0"
+timeout = 10000
+follow_redirects = true
+max_redirects = 5
+request_timeout = 10
+verify_ssl = false
+
+[web_scan.custom_headers]
+
+[exploit]
+enabled = true
+auto_exploit = false
+payload_timeout = 30
+reverse_shell_ip = "127.0.0.1"
+reverse_shell_port = 4444
+
+[reporting]
+output_dir = "./results"
+formats = ["json", "html"]
+include_raw_data = true
+compress_output = false
+
+[wordlists]
+usernames = "./wordlists/usernames.txt"
+passwords = "./wordlists/passwords.txt"
+
+[wordlists.custom_wordlists]
