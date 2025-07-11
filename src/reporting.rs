@@ -1,5 +1,5 @@
 use crate::{Result, ScanError};
-use crate::types::{ScanResult, Target, Vulnerability, Severity};
+use crate::types::{ScanResult, Severity};
 use crate::config::{Config, OutputFormat};
 use chrono::{DateTime, Utc};
 use log::{debug, info};

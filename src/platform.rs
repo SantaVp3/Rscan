@@ -1,7 +1,3 @@
-/// 平台兼容性模块
-/// 处理Windows、Linux、macOS等不同平台的特定功能
-
-use std::net::IpAddr;
 use crate::Result;
 
 // 平台特定模块在文件内部定义
@@ -57,45 +53,13 @@ pub fn get_system_info() -> Result<SystemInfo> {
 /// 检查是否具有管理员/root权限
 pub fn has_admin_privileges() -> bool {
     #[cfg(windows)]
-    {
-        use windows_sys::Win32::Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY};
-        use windows_sys::Win32::System::Threading::GetCurrentProcess;
-        use windows_sys::Win32::Foundation::{GetLastError, CloseHandle, HANDLE, TRUE};
-        use windows_sys::Win32::Security::OpenProcessToken;
-        
-        unsafe {
-            let mut token: HANDLE = 0;
-            if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) == 0 {
-                return false;
-            }
-            
-            let mut elevation = TOKEN_ELEVATION { TokenIsElevated: 0 };
-            let mut return_length = 0u32;
-            
-            let result = GetTokenInformation(
-                token,
-                TokenElevation,
-                &mut elevation as *mut _ as *mut _,
-                std::mem::size_of::<TOKEN_ELEVATION>() as u32,
-                &mut return_length
-            );
-            
-            CloseHandle(token);
-            
-            if result == 0 {
-                false
-            } else {
-                elevation.TokenIsElevated != 0
-            }
-        }
-    }
+    return windows::has_admin_privileges();
     
     #[cfg(unix)]
-    {
-        unsafe {
-            libc::geteuid() == 0
-        }
-    }
+    return unix::has_admin_privileges();
+    
+    #[cfg(not(any(windows, unix)))]
+    false
 }
 
 /// 检查是否可以创建原始套接字
@@ -109,13 +73,10 @@ pub fn can_create_raw_socket() -> bool {
     #[cfg(unix)]
     {
         // 在Unix系统上，尝试创建一个原始套接字
-        use std::os::unix::io::AsRawFd;
+        
         use socket2::{Socket, Domain, Type, Protocol};
         
-        match Socket::new(Domain::IPV4, Type::RAW, Some(Protocol::ICMPV4)) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        Socket::new(Domain::IPV4, Type::RAW, Some(Protocol::ICMPV4)).is_ok()
     }
 }
 
@@ -303,7 +264,7 @@ mod windows {
 #[cfg(unix)]
 mod unix {
     use super::*;
-    use std::net::IpAddr;
+    
     use crate::{Result, ScanError};
     
     pub fn get_network_interfaces() -> Result<Vec<NetworkInterface>> {
@@ -346,4 +307,4 @@ mod unix {
         
         Ok(())
     }
-} 
+}

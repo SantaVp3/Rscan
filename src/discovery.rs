@@ -112,7 +112,7 @@ impl HostDiscoveryEngine {
     /// 选择最优探测策略
     async fn select_optimal_strategy(&self, ips: &[IpAddr]) -> DiscoveryStrategy {
         // 检查是否是同一子网
-        let is_same_subnet = self.is_same_subnet(&ips).await;
+        let is_same_subnet = self.is_same_subnet(ips).await;
         
         // 根据平台、权限、网络环境选择策略
         if self.arp_available && is_same_subnet {
@@ -180,10 +180,7 @@ impl HostDiscoveryEngine {
             use std::time::Duration;
             
             // 使用ping crate的正确API
-            match ping::ping(ip, Some(Duration::from_secs(3)), None, None, None, None) {
-                Ok(_) => true,
-                Err(_) => false,
-            }
+            ping::ping(ip, Some(Duration::from_secs(3)), None, None, None, None).is_ok()
         }).await;
         
         match result {

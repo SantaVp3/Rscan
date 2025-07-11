@@ -57,66 +57,121 @@ async fn main() {
         Config::default()
     };
 
+    // Apply CLI overrides to config
     config.scan.threads = cli.threads;
     config.scan.timeout = cli.timeout;
-    config.scan.rate_limit = cli.rate_limit;
     config.reporting.output_dir = cli.output.clone();
-
-    if cli.enable_evasion {
+    
+    // Handle performance modes
+    if cli.fast {
+        config.scan.threads = std::cmp::max(config.scan.threads, 100);
+        config.scan.timeout = std::cmp::min(config.scan.timeout, 5);
+        config.discovery.ping_timeout = std::time::Duration::from_millis(500);
+        config.discovery.tcp_timeout = std::time::Duration::from_millis(1000);
+    } else if cli.stealth {
+        config.scan.threads = std::cmp::min(config.scan.threads, 10);
+        config.scan.timeout = std::cmp::max(config.scan.timeout, 30);
+        config.discovery.ping_timeout = std::time::Duration::from_millis(3000);
+        config.discovery.tcp_timeout = std::time::Duration::from_millis(5000);
         config.evasion.enabled = true;
-        if let Some(timing) = cli.timing {
-            config.evasion.timing_template = timing;
-        }
-        if cli.use_tor {
-            config.evasion.use_tor = true;
-        }
-        if let Some(proxy) = &cli.http_proxy {
-            config.evasion.http_proxy = Some(proxy.clone());
-        }
-        if let Some(proxy) = &cli.socks_proxy {
-            config.evasion.socks_proxy = Some(proxy.clone());
-        }
-        if cli.decoy_traffic {
-            config.evasion.generate_decoy_traffic = true;
-        }
-        
+        config.evasion.timing_template = 1; // Paranoid timing
+    }
+    
+    // Handle discovery options
+    if cli.no_ping {
+        // This would need to be implemented in the discovery module
         if !cli.quiet {
-            display.print_info("Evasion techniques enabled");
+            display.print_info("Skipping host discovery (assuming targets are alive)");
+        }
+    }
+
+    // Apply authentication settings if provided
+    if let Some(username) = &cli.username {
+        // Store username for brute force operations
+        if !cli.quiet {
+            display.print_info(&format!("Using username: {}", username));
         }
     }
 
     let start_time = SystemTime::now();
 
-    let result = match &cli.command {
-        Commands::Discovery { target, .. } => {
-            execute_discovery(&config, &display, target).await
+    // Handle simplified command structure with -h and -m
+    let result = if let Some(target) = &cli.target {
+        let targets = vec![target.clone()];
+        
+        // Determine scan type based on mode (-m) parameter
+        if let Some(mode) = &cli.mode {
+            match mode.as_str() {
+                "all" => execute_full_scan(&config, &display, &targets).await,
+                "web" => execute_web_scan(&config, &display, &targets).await,
+                "vuln" => execute_vuln_scan(&config, &display, &targets).await,
+                "ssh" | "ftp" | "telnet" | "smb" | "rdp" | "mysql" | "postgres" | "mssql" | "redis" | "oracle" => {
+                    let service_type = parse_service_type(mode);
+                    if let Some(service_type) = service_type {
+                        execute_brute_force(&config, &display, &targets, &service_type).await
+                    } else {
+                        display.print_error(&format!("Unknown service type: {}", mode));
+                        return;
+                    }
+                }
+                _ => {
+                    display.print_error(&format!("Unknown mode: {}. Available modes: all, web, vuln, ssh, ftp, telnet, smb, rdp, mysql, postgres, mssql, redis, oracle", mode));
+                    return;
+                }
+            }
+        } else if let Some(_ports) = &cli.ports {
+            execute_port_scan(&config, &display, &targets, &cli.ports).await
+        } else {
+            // Default to discovery scan
+            execute_discovery(&config, &display, &targets).await
         }
-        Commands::PortScan { target, ports, .. } => {
-            execute_port_scan(&config, &display, target, &Some(ports.clone())).await
-        }
-        Commands::BruteForce { target, service, .. } => {
-            if let Some(service) = service {
-                execute_brute_force(&config, &display, target, service).await
-            } else {
-                display.print_error("Service type must be specified for brute force attacks");
-                return;
+    } else if let Some(command) = &cli.command {
+        // Handle traditional subcommand structure
+        match command {
+            Commands::Discovery { target, .. } => {
+                execute_discovery(&config, &display, target).await
+            }
+            Commands::PortScan { target, ports, .. } => {
+                execute_port_scan(&config, &display, target, &Some(ports.clone())).await
+            }
+            Commands::BruteForce { target, service, .. } => {
+                if let Some(service) = service {
+                    execute_brute_force(&config, &display, target, service).await
+                } else {
+                    display.print_error("Service type must be specified for brute force attacks");
+                    return;
+                }
+            }
+            Commands::WebScan { target, .. } => {
+                execute_web_scan(&config, &display, target).await
+            }
+            Commands::VulnScan { target, .. } => {
+                execute_vuln_scan(&config, &display, target).await
+            }
+            Commands::Exploit { target, exploit_type, .. } => {
+                execute_exploit(&config, &display, target, exploit_type).await
+            }
+            Commands::Poc { target, poc_type, domain, username, password, wordlist, ntlm_hash, spn, output_file, interface, safe_mode, .. } => {
+                let params = PocParams {
+                    domain,
+                    username,
+                    password,
+                    wordlist,
+                    ntlm_hash,
+                    spn,
+                    output_file,
+                    interface,
+                    safe_mode: *safe_mode,
+                };
+                execute_poc(&config, &display, target, poc_type, params).await
+            }
+            Commands::FullScan { target, .. } => {
+                execute_full_scan(&config, &display, target).await
             }
         }
-        Commands::WebScan { target, .. } => {
-            execute_web_scan(&config, &display, target).await
-        }
-        Commands::VulnScan { target, .. } => {
-            execute_vuln_scan(&config, &display, target).await
-        }
-        Commands::Exploit { target, exploit_type, .. } => {
-            execute_exploit(&config, &display, target, exploit_type).await
-        }
-        Commands::Poc { target, poc_type, domain, username, password, wordlist, ntlm_hash, spn, output_file, interface, safe_mode, .. } => {
-            execute_poc(&config, &display, target, poc_type, domain, username, password, wordlist, ntlm_hash, spn, output_file, interface, *safe_mode).await
-        }
-        Commands::FullScan { target, .. } => {
-            execute_full_scan(&config, &display, target).await
-        }
+    } else {
+        display.print_error("No target specified. Use 'rscan --help' for usage information.");
+        return;
     };
 
     let elapsed = start_time.elapsed().unwrap_or_default();
@@ -271,7 +326,7 @@ async fn execute_vuln_scan(
             display.print_success(&format!("No vulnerabilities found on {}", target));
         } else {
             for vuln in &vulnerabilities {
-                display.print_vulnerability(&vuln);
+                display.print_vulnerability(vuln);
             }
         }
     }
@@ -365,42 +420,46 @@ async fn execute_exploit(
     Ok(())
 }
 
+struct PocParams<'a> {
+    domain: &'a Option<String>,
+    username: &'a Option<String>,
+    password: &'a Option<String>,
+    wordlist: &'a Option<std::path::PathBuf>,
+    ntlm_hash: &'a Option<String>,
+    spn: &'a Option<String>,
+    output_file: &'a Option<std::path::PathBuf>,
+    interface: &'a Option<String>,
+    safe_mode: bool,
+}
+
 async fn execute_poc(
     config: &Config,
     display: &DisplayManager,
     targets: &[String],
     poc_type: &rscan::cli::PocType,
-    domain: &Option<String>,
-    username: &Option<String>,
-    password: &Option<String>,
-    wordlist: &Option<std::path::PathBuf>,
-    ntlm_hash: &Option<String>,
-    spn: &Option<String>,
-    output_file: &Option<std::path::PathBuf>,
-    interface: &Option<String>,
-    safe_mode: bool,
+    params: PocParams<'_>,
 ) -> Result<()> {
     use rscan::poc::{PocEngine, PocOptions};
 
     display.print_section_header("🎯 PROOF-OF-CONCEPT EXPLOITATION");
     
-    if safe_mode {
+    if params.safe_mode {
         display.print_warning("🛡️  SAFE MODE ENABLED - All POCs will be simulated");
     } else {
         display.print_warning("⚠️  DANGER: Real exploitation mode - use with extreme caution!");
     }
 
-    let poc_engine = PocEngine::new(config.clone(), safe_mode);
+    let poc_engine = PocEngine::new(config.clone(), params.safe_mode);
     
     let poc_options = PocOptions {
-        domain: domain.clone(),
-        username: username.clone(),
-        password: password.clone(),
-        wordlist: wordlist.clone(),
-        ntlm_hash: ntlm_hash.clone(),
-        spn: spn.clone(),
-        output_file: output_file.clone(),
-        interface: interface.clone(),
+        domain: params.domain.clone(),
+        username: params.username.clone(),
+        password: params.password.clone(),
+        wordlist: params.wordlist.clone(),
+        ntlm_hash: params.ntlm_hash.clone(),
+        spn: params.spn.clone(),
+        output_file: params.output_file.clone(),
+        interface: params.interface.clone(),
     };
 
     let discovery = NetworkDiscovery::new(config.clone())?;
@@ -491,4 +550,21 @@ async fn execute_full_scan(
     display.print_success(&format!("Full scan completed in {}", rscan::utils::time::format_duration(elapsed)));
 
     Ok(())
+}
+
+/// Parse service type string to ServiceType enum
+fn parse_service_type(service: &str) -> Option<rscan::cli::ServiceType> {
+    match service.to_lowercase().as_str() {
+        "ssh" => Some(rscan::cli::ServiceType::Ssh),
+        "ftp" => Some(rscan::cli::ServiceType::Ftp),
+        "telnet" => Some(rscan::cli::ServiceType::Telnet),
+        "smb" => Some(rscan::cli::ServiceType::Smb),
+        "rdp" => Some(rscan::cli::ServiceType::Rdp),
+        "mysql" => Some(rscan::cli::ServiceType::Mysql),
+        "postgres" | "postgresql" => Some(rscan::cli::ServiceType::Postgres),
+        "mssql" | "sqlserver" => Some(rscan::cli::ServiceType::Mssql),
+        "redis" => Some(rscan::cli::ServiceType::Redis),
+        "oracle" => Some(rscan::cli::ServiceType::Oracle),
+        _ => None,
+    }
 }

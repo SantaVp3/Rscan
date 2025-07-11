@@ -1,9 +1,8 @@
-use crate::{Result, ScanError};
+use crate::Result;
 use crate::types::{Vulnerability, Severity, VulnerabilityCategory};
 use crate::config::Config;
-use crate::utils::time::now_utc;
 use chrono::Utc;
-use log::{debug, info, warn};
+use log::{debug, info};
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 use std::collections::HashMap;
@@ -403,7 +402,7 @@ impl VulnerabilityScanner {
         ];
 
         // Send negotiate
-        if let Err(_) = stream.write_all(&negotiate_request).await {
+        if (stream.write_all(&negotiate_request).await).is_err() {
             return Ok(false);
         }
 
@@ -452,7 +451,7 @@ impl VulnerabilityScanner {
         ];
 
         // Send session setup
-        if let Err(_) = stream.write_all(&session_setup).await {
+        if (stream.write_all(&session_setup).await).is_err() {
             return Ok(false);
         }
 
@@ -487,37 +486,34 @@ impl VulnerabilityScanner {
         // Send PING command without authentication
         let ping_cmd = b"*1\r\n$4\r\nPING\r\n";
         
-        match timeout(Duration::from_secs(3), stream.write_all(ping_cmd)).await {
-            Ok(Ok(_)) => {
-                let mut buffer = vec![0; 1024];
-                match timeout(Duration::from_secs(3), stream.read(&mut buffer)).await {
-                    Ok(Ok(n)) if n > 0 => {
-                        let response = String::from_utf8_lossy(&buffer[..n]);
-                        if response.contains("+PONG") {
-                            return Ok(Some(Vulnerability {
-                                id: "REDIS-NO-AUTH".to_string(),
-                                name: "Redis No Authentication".to_string(),
-                                description: "Redis server is accessible without authentication".to_string(),
-                                severity: Severity::High,
-                                target,
-                                port: Some(6379),
-                                evidence: Some("PING command successful without authentication".to_string()),
-                                discovered_at: Utc::now(),
-                                cvss_score: Some(7.5),
-                                cve_id: None,
-                                category: VulnerabilityCategory::Authentication,
-                                remediation: Some("Configure Redis authentication with requirepass directive".to_string()),
-                                references: vec![
-                                    "https://redis.io/topics/security".to_string(),
-                                    "https://redis.io/commands/auth".to_string(),
-                                ],
-                            }));
-                        }
+        if let Ok(Ok(_)) = timeout(Duration::from_secs(3), stream.write_all(ping_cmd)).await {
+            let mut buffer = vec![0; 1024];
+            match timeout(Duration::from_secs(3), stream.read(&mut buffer)).await {
+                Ok(Ok(n)) if n > 0 => {
+                    let response = String::from_utf8_lossy(&buffer[..n]);
+                    if response.contains("+PONG") {
+                        return Ok(Some(Vulnerability {
+                            id: "REDIS-NO-AUTH".to_string(),
+                            name: "Redis No Authentication".to_string(),
+                            description: "Redis server is accessible without authentication".to_string(),
+                            severity: Severity::High,
+                            target,
+                            port: Some(6379),
+                            evidence: Some("PING command successful without authentication".to_string()),
+                            discovered_at: Utc::now(),
+                            cvss_score: Some(7.5),
+                            cve_id: None,
+                            category: VulnerabilityCategory::Authentication,
+                            remediation: Some("Configure Redis authentication with requirepass directive".to_string()),
+                            references: vec![
+                                "https://redis.io/topics/security".to_string(),
+                                "https://redis.io/commands/auth".to_string(),
+                            ],
+                        }));
                     }
-                    _ => {}
                 }
+                _ => {}
             }
-            _ => {}
         }
         
         Ok(None)

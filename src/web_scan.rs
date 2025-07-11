@@ -4,7 +4,6 @@ use crate::evasion::EvasionEngine;
 use log::{debug, info, warn};
 use reqwest::Client;
 use scraper::{Html, Selector};
-use std::collections::HashMap;
 use std::time::Duration;
 use url::Url;
 
@@ -265,16 +264,13 @@ impl WebScanner {
 
             match self.get_client().await? {
                 client => {
-                    match client.get(&test_url).send().await {
-                        Ok(response) => {
-                            if let Ok(body) = response.text().await {
-                                if body.contains("root:") || body.contains("localhost") {
-                                    vulnerabilities.push("Directory traversal vulnerability detected".to_string());
-                                    break;
-                                }
+                    if let Ok(response) = client.get(&test_url).send().await {
+                        if let Ok(body) = response.text().await {
+                            if body.contains("root:") || body.contains("localhost") {
+                                vulnerabilities.push("Directory traversal vulnerability detected".to_string());
+                                break;
                             }
                         }
-                        Err(_) => {}
                     }
                 }
             }
@@ -295,21 +291,18 @@ impl WebScanner {
 
             match self.get_client().await? {
                 client => {
-                    match client.get(&test_url).send().await {
-                        Ok(response) => {
-                            if let Ok(body) = response.text().await {
-                                let body_lower = body.to_lowercase();
-                                if body_lower.contains("sql syntax") ||
-                                   body_lower.contains("mysql_fetch") ||
-                                   body_lower.contains("ora-01756") ||
-                                   body_lower.contains("microsoft jet database") ||
-                                   body_lower.contains("odbc drivers error") {
-                                    vulnerabilities.push("Potential SQL injection vulnerability".to_string());
-                                    break;
-                                }
+                    if let Ok(response) = client.get(&test_url).send().await {
+                        if let Ok(body) = response.text().await {
+                            let body_lower = body.to_lowercase();
+                            if body_lower.contains("sql syntax") ||
+                               body_lower.contains("mysql_fetch") ||
+                               body_lower.contains("ora-01756") ||
+                               body_lower.contains("microsoft jet database") ||
+                               body_lower.contains("odbc drivers error") {
+                                vulnerabilities.push("Potential SQL injection vulnerability".to_string());
+                                break;
                             }
                         }
-                        Err(_) => {}
                     }
                 }
             }
@@ -324,15 +317,12 @@ impl WebScanner {
 
         match self.get_client().await? {
             client => {
-                match client.get(&test_url).send().await {
-                    Ok(response) => {
-                        if let Ok(body) = response.text().await {
-                            if body.contains(xss_payload) {
-                                vulnerabilities.push("Potential XSS vulnerability detected".to_string());
-                            }
+                if let Ok(response) = client.get(&test_url).send().await {
+                    if let Ok(body) = response.text().await {
+                        if body.contains(xss_payload) {
+                            vulnerabilities.push("Potential XSS vulnerability detected".to_string());
                         }
                     }
-                    Err(_) => {}
                 }
             }
         }
@@ -360,13 +350,10 @@ impl WebScanner {
 
                     match self.get_client().await? {
                         client => {
-                            match client.get(&test_url).send().await {
-                                Ok(response) => {
-                                    if response.status().is_success() {
-                                        vulnerabilities.push(description.to_string());
-                                    }
+                            if let Ok(response) = client.get(&test_url).send().await {
+                                if response.status().is_success() {
+                                    vulnerabilities.push(description.to_string());
                                 }
-                                Err(_) => {}
                             }
                         }
                     }
@@ -388,13 +375,10 @@ impl WebScanner {
 
                     match self.get_client().await? {
                         client => {
-                            match client.get(&test_url).send().await {
-                                Ok(response) => {
-                                    if response.status().is_success() {
-                                        vulnerabilities.push(description.to_string());
-                                    }
+                            if let Ok(response) = client.get(&test_url).send().await {
+                                if response.status().is_success() {
+                                    vulnerabilities.push(description.to_string());
                                 }
-                                Err(_) => {}
                             }
                         }
                     }
@@ -415,13 +399,10 @@ impl WebScanner {
 
                     match self.get_client().await? {
                         client => {
-                            match client.get(&test_url).send().await {
-                                Ok(response) => {
-                                    if response.status().is_success() {
-                                        vulnerabilities.push(description.to_string());
-                                    }
+                            if let Ok(response) = client.get(&test_url).send().await {
+                                if response.status().is_success() {
+                                    vulnerabilities.push(description.to_string());
                                 }
-                                Err(_) => {}
                             }
                         }
                     }
