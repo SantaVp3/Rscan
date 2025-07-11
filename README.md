@@ -291,9 +291,9 @@ rscan --host 192.168.1.0/24 -m vuln
 
 ## 📞 联系方式
 
-- 项目主页: [GitHub Repository](https://github.com/your-repo/rscan)
-- 问题反馈: [Issues](https://github.com/your-repo/rscan/issues)
-- 安全漏洞: security@example.com
+- 项目主页: [GitHub Repository](https://github.com/SantaVp3))
+- 问题反馈: [Issues] (https://github.com/SantaVp3rscan/issues)
+- 安全漏洞: vpsanta3@gmail.com
 
 ---
 
