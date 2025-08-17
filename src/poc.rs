@@ -1,7 +1,7 @@
 use crate::{Result, ScanError};
 use crate::config::Config;
 use crate::cli::PocType;
-use log::{debug, info, warn, error};
+use log::{info, warn};
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 use std::path::PathBuf;

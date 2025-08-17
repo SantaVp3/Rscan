@@ -1,6 +1,6 @@
 use crate::types::{Vulnerability, Severity};
 use colored::*;
-use std::io::{self, Write};
+use std::io::Write;
 
 /// Enhanced display utilities for clean, colored output and formatting
 pub struct DisplayManager {

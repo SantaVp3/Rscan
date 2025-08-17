@@ -10,7 +10,7 @@ use std::time::Duration;
 #[tokio::test]
 async fn test_network_discovery_creation() -> Result<()> {
     let config = Config::default();
-    let discovery = NetworkDiscovery::new(config)?;
+    let _discovery = NetworkDiscovery::new(config)?;
     
     // Test that we can create a NetworkDiscovery instance
     assert!(true); // If we get here, creation was successful
@@ -28,9 +28,8 @@ async fn test_config_default() {
     assert_eq!(config.scan.retries, 3);
     assert_eq!(config.scan.user_agent, "Rscan/1.0");
     
-    assert_eq!(config.discovery.ping_timeout, 1000);
-    assert_eq!(config.discovery.port_scan_timeout, 3000);
-    assert_eq!(config.discovery.tcp_connect_timeout, 5000);
+    assert_eq!(config.discovery.ping_timeout, Duration::from_millis(1000));
+    assert_eq!(config.discovery.tcp_timeout, Duration::from_millis(5000));
     assert_eq!(config.discovery.udp_timeout, Duration::from_millis(2000));
     
     assert_eq!(config.brute_force.max_attempts, 1000);

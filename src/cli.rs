@@ -12,22 +12,39 @@ penetration testing and security assessment purposes.
 WARNING: This tool should only be used on networks and systems you own or 
 have explicit permission to test. Unauthorized scanning may be illegal.
 
-Examples:
-  rscan discovery -t 192.168.1.0/24
-  rscan port-scan -t 192.168.1.100 -p 1-1000
-  rscan brute-force -t 192.168.1.100 -s ssh
-  rscan web-scan -t http://192.168.1.100
-  rscan full-scan -t 192.168.1.0/24 --output ./results
+Simple Usage Examples:
+  rscan --host 192.168.1.0/24                 # Quick discovery scan
+  rscan --host 192.168.1.100 -p 80,443        # Port scan specific ports  
+  rscan --host 192.168.1.100 -m web           # Web application scan
+  rscan --host 192.168.1.100 -m vuln          # Vulnerability scan
+  rscan --host 192.168.1.100 -m all           # Full comprehensive scan
+  rscan --host 192.168.1.100 -m ssh           # SSH brute force
+  rscan --host 192.168.1.100 --fast           # Fast aggressive scan
+  rscan --host 192.168.1.100 --stealth        # Stealth mode scan
 "#)]
+#[command(version)]
+#[command(author)]
 pub struct Cli {
+    /// Target IP address, range, or CIDR notation (e.g., 192.168.1.1, 192.168.1.0/24)
+    #[arg(long = "host", value_name = "TARGET")]
+    pub target: Option<String>,
+
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>,
+
+    /// Port range for scanning (e.g., 80,443 or 1-1000)
+    #[arg(short, long, value_name = "PORTS")]
+    pub ports: Option<String>,
+
+    /// Scan mode: web, vuln, all, ssh, ftp, rdp, mysql, etc.
+    #[arg(short, long, value_name = "MODE")]
+    pub mode: Option<String>,
 
     /// Configuration file path
     #[arg(short, long, value_name = "FILE")]
     pub config: Option<PathBuf>,
 
-    /// Verbose output
+    /// Verbose output (-v, -vv, -vvv)
     #[arg(short, long, action = clap::ArgAction::Count)]
     pub verbose: u8,
 
@@ -36,16 +53,12 @@ pub struct Cli {
     pub quiet: bool,
 
     /// Number of concurrent threads
-    #[arg(long, default_value = "100")]
+    #[arg(long, default_value = "50")]
     pub threads: usize,
 
     /// Request timeout in seconds
-    #[arg(long, default_value = "30")]
+    #[arg(long, default_value = "10")]
     pub timeout: u64,
-
-    /// Rate limit (requests per second)
-    #[arg(long, default_value = "100")]
-    pub rate_limit: u64,
 
     /// Output directory
     #[arg(short, long, default_value = "./reports")]
@@ -55,29 +68,29 @@ pub struct Cli {
     #[arg(long, value_enum, default_value = "json")]
     pub format: OutputFormat,
 
-    /// Enable evasion techniques
+    /// Enable stealth mode (slower but more evasive)
     #[arg(long)]
-    pub enable_evasion: bool,
+    pub stealth: bool,
 
-    /// Timing template for evasion (1-5: 1=paranoid, 5=aggressive)
-    #[arg(long, value_name = "LEVEL")]
-    pub timing: Option<u8>,
-
-    /// Use TOR network for requests
+    /// Fast mode (aggressive scanning)
     #[arg(long)]
-    pub use_tor: bool,
+    pub fast: bool,
 
-    /// HTTP proxy (format: http://user:pass@host:port)
-    #[arg(long, value_name = "PROXY")]
-    pub http_proxy: Option<String>,
-
-    /// SOCKS5 proxy (format: socks5://user:pass@host:port)
-    #[arg(long, value_name = "PROXY")]
-    pub socks_proxy: Option<String>,
-
-    /// Generate decoy traffic to mask scanning
+    /// Skip host discovery (assume targets are alive)
     #[arg(long)]
-    pub decoy_traffic: bool,
+    pub no_ping: bool,
+
+    /// Username for authentication
+    #[arg(short, long)]
+    pub username: Option<String>,
+
+    /// Password for authentication
+    #[arg(long)]
+    pub password: Option<String>,
+
+    /// Wordlist file for brute force
+    #[arg(short, long)]
+    pub wordlist: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]

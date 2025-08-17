@@ -3,12 +3,11 @@ use log::{debug, info};
 use std::net::IpAddr;
 use std::path::Path;
 use tokio::fs;
-use colored::*;
 
 /// Network utilities
 pub mod network {
     use super::*;
-    use std::net::{Ipv4Addr, Ipv6Addr};
+    use std::net::Ipv4Addr;
 
     /// Check if an IP address is in a private range
     pub fn is_private_ip(ip: &IpAddr) -> bool {
@@ -231,12 +230,12 @@ pub mod banner {
         let mut stream = timeout(Duration::from_secs(5), TcpStream::connect(addr))
             .await
             .map_err(|_| ScanError::Timeout { operation: "TCP connect".to_string() })?
-            .map_err(|e| ScanError::Network(e))?;
+            .map_err(ScanError::Network)?;
 
         // Send probe if provided
         if let Some(probe_data) = probe {
             stream.write_all(probe_data.as_bytes()).await
-                .map_err(|e| ScanError::Network(e))?;
+                .map_err(ScanError::Network)?;
         }
 
         // Read response
@@ -264,7 +263,7 @@ pub mod banner {
             .timeout(Duration::from_secs(10))
             .danger_accept_invalid_certs(true)
             .build()
-            .map_err(|e| ScanError::Http(e))?;
+            .map_err(ScanError::Http)?;
 
         match client.head(&url).send().await {
             Ok(response) => {
@@ -335,5 +334,154 @@ pub mod time {
     /// Calculate elapsed time since start
     pub fn elapsed_since(start: SystemTime) -> Duration {
         SystemTime::now().duration_since(start).unwrap_or_default()
+    }
+}
+
+/// Performance optimization utilities
+pub mod performance {
+    use std::sync::Arc;
+    use tokio::sync::Semaphore;
+    use std::collections::HashMap;
+    use std::hash::Hash;
+    use parking_lot::RwLock;
+    use std::time::{Duration, Instant};
+
+    /// Simple LRU cache for DNS lookups and other expensive operations
+    pub struct SimpleCache<K, V> {
+        data: Arc<RwLock<HashMap<K, (V, Instant)>>>,
+        ttl: Duration,
+        max_size: usize,
+    }
+
+    impl<K: Clone + Hash + Eq, V: Clone> SimpleCache<K, V> {
+        pub fn new(max_size: usize, ttl: Duration) -> Self {
+            Self {
+                data: Arc::new(RwLock::new(HashMap::new())),
+                ttl,
+                max_size,
+            }
+        }
+
+        pub fn get(&self, key: &K) -> Option<V> {
+            let data = self.data.read();
+            if let Some((value, timestamp)) = data.get(key) {
+                if timestamp.elapsed() < self.ttl {
+                    return Some(value.clone());
+                }
+            }
+            None
+        }
+
+        pub fn insert(&self, key: K, value: V) {
+            let mut data = self.data.write();
+            
+            // Simple eviction: remove expired entries
+            let now = Instant::now();
+            data.retain(|_, (_, timestamp)| now.duration_since(*timestamp) < self.ttl);
+            
+            // If still too large, remove oldest entries
+            if data.len() >= self.max_size {
+                let oldest_key = data.iter()
+                    .min_by_key(|(_, (_, timestamp))| *timestamp)
+                    .map(|(k, _)| k.clone());
+                if let Some(key) = oldest_key {
+                    data.remove(&key);
+                }
+            }
+            
+            data.insert(key, (value, now));
+        }
+
+        pub fn clear(&self) {
+            self.data.write().clear();
+        }
+    }
+
+    /// Rate limiter using token bucket algorithm
+    pub struct RateLimiter {
+        semaphore: Arc<Semaphore>,
+        interval: Duration,
+    }
+
+    impl RateLimiter {
+        pub fn new(max_concurrent: usize, requests_per_second: f64) -> Self {
+            let interval = Duration::from_secs_f64(1.0 / requests_per_second);
+            Self {
+                semaphore: Arc::new(Semaphore::new(max_concurrent)),
+                interval,
+            }
+        }
+
+        pub async fn acquire(&self) -> tokio::sync::SemaphorePermit<'_> {
+            let permit = self.semaphore.acquire().await.unwrap();
+            tokio::time::sleep(self.interval).await;
+            permit
+        }
+    }
+
+    /// Memory pool for reusing expensive objects
+    pub struct ObjectPool<T> {
+        objects: Arc<RwLock<Vec<T>>>,
+        factory: Arc<dyn Fn() -> T + Send + Sync>,
+        max_size: usize,
+    }
+
+    impl<T> ObjectPool<T> {
+        pub fn new<F>(factory: F, max_size: usize) -> Self 
+        where 
+            F: Fn() -> T + Send + Sync + 'static,
+        {
+            Self {
+                objects: Arc::new(RwLock::new(Vec::new())),
+                factory: Arc::new(factory),
+                max_size,
+            }
+        }
+
+        pub fn get(&self) -> T {
+            let mut objects = self.objects.write();
+            objects.pop().unwrap_or_else(|| (self.factory)())
+        }
+
+        pub fn return_object(&self, obj: T) {
+            let mut objects = self.objects.write();
+            if objects.len() < self.max_size {
+                objects.push(obj);
+            }
+        }
+    }
+
+    /// Batch processor for efficient bulk operations
+    pub struct BatchProcessor<T> {
+        batch_size: usize,
+        timeout: Duration,
+        buffer: Arc<RwLock<Vec<T>>>,
+    }
+
+    impl<T> BatchProcessor<T> {
+        pub fn new(batch_size: usize, timeout: Duration) -> Self {
+            Self {
+                batch_size,
+                timeout,
+                buffer: Arc::new(RwLock::new(Vec::new())),
+            }
+        }
+
+        pub async fn add(&self, item: T) -> Option<Vec<T>> {
+            let mut buffer = self.buffer.write();
+            buffer.push(item);
+            
+            if buffer.len() >= self.batch_size {
+                let batch = buffer.drain(..).collect();
+                Some(batch)
+            } else {
+                None
+            }
+        }
+
+        pub fn flush(&self) -> Vec<T> {
+            let mut buffer = self.buffer.write();
+            buffer.drain(..).collect()
+        }
     }
 }

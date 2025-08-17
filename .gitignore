@@ -1,6 +1,6 @@
 # Rust compilation artifacts
+target/
 /target/
-Cargo.lock
 
 # Debug files
 *.pdb
@@ -8,6 +8,7 @@ Cargo.lock
 # IDE files
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 
@@ -38,4 +39,13 @@ test_output/
 
 # Backup files
 *.bak
-*.backup 
+*.backup
+
+# Cross-platform build artifacts
+/dist/
+/releases/
+
+# Platform-specific files
+*.dll
+*.dylib
+*.so 

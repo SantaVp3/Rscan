@@ -15,9 +15,9 @@ use log::{debug, info, warn};
 use parking_lot::RwLock;
 use reqwest::{Client, Proxy};
 use std::collections::HashMap;
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 use tokio::time::sleep;
 use url::Url;
 
@@ -253,7 +253,7 @@ impl EvasionEngine {
 
         // Add proxy if configured
         if let Some(proxy_config) = self.get_random_proxy() {
-            let proxy = self.create_proxy(&proxy_config)?;
+            let proxy = self.create_proxy(proxy_config)?;
             client_builder = client_builder.proxy(proxy);
         }
 
@@ -393,6 +393,12 @@ impl EvasionEngine {
         } else {
             false
         }
+    }
+}
+
+impl Default for TrafficMixer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

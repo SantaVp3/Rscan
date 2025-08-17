@@ -2,7 +2,6 @@ use crate::{Result, ScanError};
 use crate::types::Credentials;
 use crate::config::Config;
 use async_trait::async_trait;
-use futures::stream;
 use log::{debug, info, warn};
 use std::net::{IpAddr, SocketAddr};
 use std::path::Path;
@@ -218,7 +217,7 @@ pub struct MysqlBruteForcer;
 #[async_trait]
 impl BruteForcer for MysqlBruteForcer {
     async fn attempt_login(&self, target: IpAddr, port: u16, username: &str, password: &str) -> Result<bool> {
-        use mysql_async::{Conn, Opts, OptsBuilder};
+        use mysql_async::{Conn, OptsBuilder};
 
         let opts = OptsBuilder::default()
             .ip_or_hostname(target.to_string())
@@ -259,7 +258,7 @@ impl BruteForcer for PostgresBruteForcer {
         use tokio_postgres::{Config, NoTls};
 
         let mut config = Config::new();
-        config.host(&target.to_string())
+        config.host(target.to_string())
             .port(port)
             .user(username)
             .password(password)
@@ -306,7 +305,7 @@ pub struct RedisBruteForcer;
 #[async_trait]
 impl BruteForcer for RedisBruteForcer {
     async fn attempt_login(&self, target: IpAddr, port: u16, _username: &str, password: &str) -> Result<bool> {
-        use redis::{Client, ConnectionLike};
+        use redis::Client;
         
         let url = format!("redis://{}:{}/{}", target, port, 0);
         let client = Client::open(url)
@@ -395,7 +394,7 @@ impl BruteForcer for TelnetBruteForcer {
         }
 
         // Send username
-        if let Err(_) = writer.write_all(format!("{}\r\n", username).as_bytes()).await {
+        if (writer.write_all(format!("{}\r\n", username).as_bytes()).await).is_err() {
             return Ok(false);
         }
 
@@ -407,7 +406,7 @@ impl BruteForcer for TelnetBruteForcer {
         }
 
         // Send password
-        if let Err(_) = writer.write_all(format!("{}\r\n", password).as_bytes()).await {
+        if (writer.write_all(format!("{}\r\n", password).as_bytes()).await).is_err() {
             return Ok(false);
         }
 
@@ -452,7 +451,7 @@ impl BruteForcer for SmbBruteForcer {
     async fn attempt_login(&self, target: IpAddr, port: u16, username: &str, password: &str) -> Result<bool> {
         // Simplified SMB authentication check
         // In a full implementation, you would use proper SMB/CIFS protocol
-        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::io::AsyncWriteExt;
         use tokio::net::TcpStream;
 
         let addr = SocketAddr::new(target, port);
@@ -465,7 +464,7 @@ impl BruteForcer for SmbBruteForcer {
         let test_data = b"SMB_TEST";
 
         // Send test data
-        if let Err(_) = stream.write_all(test_data).await {
+        if (stream.write_all(test_data).await).is_err() {
             return Ok(false);
         }
 
@@ -508,7 +507,7 @@ impl BruteForcer for RdpBruteForcer {
         ];
 
         // Send connection request
-        if let Err(_) = stream.write_all(&rdp_request).await {
+        if (stream.write_all(&rdp_request).await).is_err() {
             return Ok(false);
         }
 

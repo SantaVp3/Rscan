@@ -70,6 +70,12 @@ pub enum ScanError {
 
     #[error("Evasion error: {0}")]
     EvasionError(String),
+
+    #[error("Platform not supported: {0}")]
+    PlatformNotSupported(String),
+
+    #[error("System error: {0}")]
+    SystemError(String),
 }
 
 impl From<mysql_async::Error> for ScanError {

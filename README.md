@@ -1,333 +1,300 @@
-# 🔒 Rscan - Comprehensive Network Security Scanner
+# 🔒 Rscan - 综合网络安全扫描器
 
-Rscan is a powerful, fast, and comprehensive internal network scanning tool written in Rust. It provides automated vulnerability assessment capabilities for ethical penetration testing and security assessment purposes.
+一款基于Rust开发的网络安全扫描工具，专注于内网环境的安全评估和渗透测试辅助。
 
-## ⚠️ **IMPORTANT DISCLAIMER**
+## ⚠️ 免责声明
 
-**This tool is designed for authorized security testing only. Users are responsible for ensuring they have proper permission before scanning any networks or systems. Unauthorized scanning may be illegal and could result in criminal charges. Always obtain explicit written permission before using this tool.**
+**本工具仅供授权的安全测试使用。未经授权扫描他人网络可能违法，使用者需自行承担法律责任。**
 
-## 🚀 Features
+## ✨ 主要功能
 
-### Network Discovery & Information Gathering
-- **ICMP-based host discovery** to identify live hosts on the network
-- **Comprehensive port scanner** with TCP and UDP support
-- **Service detection** to identify services running on open ports
-- **Configurable timeouts and threading** for optimal performance
-- **IPv4 and IPv6 support**
+### 🔍 信息收集
+- **主机发现**: ICMP/TCP/UDP 存活检测
+- **端口扫描**: TCP/UDP 端口扫描，支持自定义端口范围
+- **服务识别**: 自动识别开放端口上运行的服务
+- **Banner 抓取**: 获取服务版本信息
 
-### Authentication Brute Force
-- **SSH** (port 22) brute force attacks
-- **SMB/CIFS** (ports 139, 445) authentication testing
-- **RDP** (port 3389) credential testing
-- **FTP** (port 21) and **Telnet** (port 23) brute forcing
-- **Database services** support:
-  - MySQL (port 3306)
-  - Microsoft SQL Server (port 1433)
-  - Redis (port 6379)
-  - PostgreSQL (port 5432)
-  - Oracle (port 1521)
-- **Custom wordlist support** with built-in common credentials
+### 💥 漏洞扫描
+- **已知漏洞检测**: MS17-010 (EternalBlue)、Heartbleed、Shellshock 等
+- **基础Web检测**: 常见文件暴露、目录遍历等
+- **服务配置检查**: Redis未授权访问、SMB空会话等
+- **默认凭据检测**: 常见服务的默认用户名密码
 
-### System Information & Vulnerability Detection
-- **NetBIOS enumeration** and domain controller identification
-- **MS17-010 (EternalBlue)** detection
-- **SMB version detection** and security assessment
-- **Default credential detection** across multiple services
-- **Web vulnerability scanning** for common issues
+### 🔓 暴力破解
+- **SSH协议**: 基于密码的认证测试
+- **数据库服务**: MySQL、Redis 连接认证
+- **字典支持**: 内置和自定义用户名密码字典
+- **速率控制**: 可配置的尝试间隔和延迟
 
-### Evasion & Stealth Techniques 🥷
-- **Traffic obfuscation** with realistic user-agent rotation
-- **Timing randomization** with configurable jitter and delays
-- **Proxy chain support** for HTTP, SOCKS5, and TOR networks
-- **Decoy traffic generation** to mask scanning activity
-- **Request header randomization** to avoid fingerprinting
-- **Source port randomization** for network-level evasion
-- **Rate limiting with burst patterns** to mimic human behavior
-- **Configurable timing templates** (Paranoid to Aggressive modes)
+### 🌐 Web 应用扫描
+- **技术指纹**: 基础的CMS和框架识别 (WordPress、Drupal等)
+- **目录发现**: 常见目录和文件的存在性检测
+- **基础检测**: robots.txt、sitemap.xml等文件暴露
+- **信息收集**: 页面标题、服务器信息提取
 
-### Web Application Assessment
-- **HTTP/HTTPS service detection** and banner grabbing
-- **Website title extraction** and technology fingerprinting
-- **CMS detection** (WordPress, Drupal, Joomla)
-- **Framework identification** (React, Angular, Vue.js, PHP, ASP.NET)
-- **Directory brute forcing** with common wordlists
-- **Common vulnerability checks** (exposed files, directory traversal)
+### 🎯 渗透利用
+- **模拟利用**: 安全的漏洞利用模拟 (仅用于验证)
+- **Redis利用**: SSH密钥注入、计划任务注入
+- **SSH命令执行**: 基于已知凭据的命令执行
+- **安全测试**: 专注于概念验证而非实际攻击
 
-### Exploitation Capabilities
-- **Redis exploitation**:
-  - SSH public key injection
-  - Cron job/scheduled task injection
-- **SSH command execution** for authenticated sessions
-- **MS17-010 exploitation framework** (placeholder for safety)
-- **Reverse shell payload generation**
+## 🚀 快速开始
 
-### Output & Reporting
-- **Multiple output formats**: JSON, CSV, HTML, XML
-- **Comprehensive HTML reports** with CSS styling
-- **Real-time progress reporting** with progress bars
-- **Vulnerability classification** and risk assessment
-- **Executive summary generation**
+### 安装要求
 
-## 📦 Installation
+- Rust 1.70+
+- 操作系统: Windows、Linux、macOS
 
-### Prerequisites
-- Rust 1.70 or later
-- Cargo package manager
+### 编译安装
 
-### Building from Source
 ```bash
-git clone https://github.com/your-org/rscan.git
+# 克隆项目
+git clone https://github.com/your-repo/rscan.git
 cd rscan
+
+# 编译项目
 cargo build --release
-```
 
-### Running
-```bash
-# Run with default configuration
+# 运行程序
 ./target/release/rscan --help
-
-# Or use cargo run for development
-cargo run -- --help
 ```
 
-## 🛠️ Usage
+### 基本用法
 
-### Basic Commands
-
-#### Network Discovery
 ```bash
-# Discover live hosts in a subnet
-rscan discovery -t 192.168.1.0/24
+# 主机发现
+rscan --host 192.168.1.0/24
 
-# Discover specific IP range
-rscan discovery -t 192.168.1.1-192.168.1.100
+# 端口扫描
+rscan --host 192.168.1.100 -p 80,443,22
 
-# Skip ping and assume hosts are alive
-rscan discovery -t 192.168.1.0/24 --skip-ping
+# Web 应用扫描
+rscan --host 192.168.1.100 -m web
+
+# 漏洞扫描
+rscan --host 192.168.1.100 -m vuln
+
+# 全面扫描
+rscan --host 192.168.1.100 -m all
+
+# SSH 爆破
+rscan --host 192.168.1.100 -m ssh -u admin -w passwords.txt
 ```
 
-#### Port Scanning
+## 📋 详细用法
+
+### 主机发现
+
 ```bash
-# Scan common ports
-rscan port-scan -t 192.168.1.100
+# 扫描单个主机
+rscan --host 192.168.1.100
 
-# Scan specific port range
-rscan port-scan -t 192.168.1.100 -p 1-1000
+# 扫描网段
+rscan --host 192.168.1.0/24
 
-# Scan with service detection
-rscan port-scan -t 192.168.1.100 --service-detection
-
-# Scan multiple targets
-rscan port-scan -t 192.168.1.100,192.168.1.101,192.168.1.102
+# 扫描 IP 范围
+rscan --host 192.168.1.1-100
 ```
 
-#### Brute Force Attacks
+### 端口扫描
+
 ```bash
-# SSH brute force with default wordlists
-rscan brute-force -t 192.168.1.100 -s ssh
+# 扫描指定端口
+rscan --host 192.168.1.100 -p 80,443,22,3389
 
-# MySQL brute force with custom wordlists
-rscan brute-force -t 192.168.1.100 -s mysql -u usernames.txt -p passwords.txt
+# 扫描端口范围
+rscan --host 192.168.1.100 -p 1-1000
 
-# Single credential test
-rscan brute-force -t 192.168.1.100 -s ssh --username admin --password password123
+# 全端口扫描
+rscan --host 192.168.1.100 -p 1-65535
 ```
 
-#### Web Application Scanning
+### 性能模式
+
 ```bash
-# Basic web scan
-rscan web-scan -t http://192.168.1.100
+# 快速模式 (适合内网)
+rscan --host 192.168.1.0/24 --fast
 
-# Web scan with technology fingerprinting
-rscan web-scan -t http://192.168.1.100 --fingerprint
-
-# Web scan with directory brute forcing
-rscan web-scan -t http://192.168.1.100 --dir-brute
-
-# Comprehensive web vulnerability scan
-rscan web-scan -t http://192.168.1.100 --fingerprint --dir-brute --vuln-scan
+# 隐蔽模式 (适合外网)
+rscan --host target.com --stealth
 ```
 
-#### Vulnerability Scanning
+### 服务爆破
+
 ```bash
-# Full vulnerability scan
-rscan vuln-scan -t 192.168.1.100
+# SSH 爆破
+rscan --host 192.168.1.100 -m ssh -u root -w passwords.txt
 
-# Skip specific checks
-rscan vuln-scan -t 192.168.1.100 --skip-ms17-010 --skip-smb
+# MySQL 爆破
+rscan --host 192.168.1.100 -m mysql -u root --password ""
+
+# RDP 爆破
+rscan --host 192.168.1.100 -m rdp -u administrator -w passwords.txt
 ```
 
-#### Comprehensive Scanning
+### 输出控制
+
 ```bash
-# Full automated scan
-rscan full-scan -t 192.168.1.0/24
+# 指定输出目录
+rscan --host 192.168.1.100 -o /tmp/scan_results
 
-# Full scan with exploitation enabled (use with extreme caution)
-rscan full-scan -t 192.168.1.0/24 --enable-exploit
+# 指定输出格式
+rscan --host 192.168.1.100 --format json
+rscan --host 192.168.1.100 --format html
 
-# Customized full scan
-rscan full-scan -t 192.168.1.0/24 --skip-brute-force --skip-web-scan
+# 详细输出
+rscan --host 192.168.1.100 -v
+rscan --host 192.168.1.100 -vv
+rscan --host 192.168.1.100 -vvv
 ```
 
-#### Evasion & Stealth Techniques
+## ⚙️ 配置文件
+
+使用配置文件可以预设扫描参数:
+
 ```bash
-# Basic stealth scan with timing randomization
-rscan web-scan -t http://target.com --enable-evasion --timing 2
-
-# Paranoid mode with maximum stealth
-rscan port-scan -t 192.168.1.100 --enable-evasion --timing 1
-
-# Using TOR network for anonymity
-rscan web-scan -t http://target.com --enable-evasion --use-tor
-
-# HTTP proxy chain
-rscan web-scan -t http://target.com --enable-evasion --http-proxy http://proxy:8080
-
-# SOCKS5 proxy with decoy traffic
-rscan web-scan -t http://target.com --enable-evasion --socks-proxy socks5://proxy:1080 --decoy-traffic
-
-# Full stealth mode combining multiple techniques
-rscan full-scan -t 192.168.1.0/24 --enable-evasion --timing 1 --use-tor --decoy-traffic
+rscan --host 192.168.1.0/24 -c config.toml
 ```
 
-### Advanced Options
+配置文件示例 (`config.toml`):
 
-#### Configuration File
+```toml
+[scan]
+threads = 100
+timeout = 10
+ports = "1-1000"
+
+[discovery]
+ping_timeout = 1000
+tcp_timeout = 3000
+
+[brute_force]
+max_attempts = 1000
+delay = 100
+```
+
+## 📊 支持的协议和服务
+
+### 网络协议
+- TCP/UDP 端口扫描
+- ICMP 主机发现
+- ARP 扫描
+- IPv4/IPv6 支持
+
+### 应用协议
+- **Web**: HTTP/HTTPS 基础扫描
+- **远程访问**: SSH、RDP 暴力破解
+- **文件共享**: SMB 基础检测
+- **数据库**: MySQL、Redis 连接测试
+- **其他**: 基于端口的服务识别
+
+## 🛡️ 规避技术
+
+- **时间延迟**: 可配置的请求间隔和随机延迟
+- **User-Agent轮换**: 模拟不同浏览器请求
+- **代理支持**: HTTP/SOCKS5 代理链
+- **请求头随机化**: 避免指纹识别
+- **诱饵流量**: 生成混淆流量
+
+## 📈 性能特性
+
+- **异步扫描**: 基于Tokio的异步I/O
+- **并发控制**: 可配置的线程数量
+- **超时管理**: 灵活的连接和读取超时
+- **资源管理**: 合理的内存和网络资源使用
+- **进度显示**: 实时扫描进度反馈
+
+## 🔧 高级功能
+
+### PoC 框架
+
+提供基础的概念验证框架:
+
 ```bash
-# Use custom configuration
-rscan -c custom-config.toml discovery -t 192.168.1.0/24
-
-# Generate default configuration
-cp config.toml my-config.toml
-# Edit my-config.toml as needed
+# 注意: PoC功能仍在开发中
+rscan --host 192.168.1.100 -m vuln
 ```
 
-#### Output and Reporting
+### 报告生成
+
+支持多种格式的扫描报告:
+
+- JSON 格式 (机器可读)
+- HTML 格式 (可视化报告)
+- CSV 格式 (数据分析)
+- XML 格式 (结构化数据)
+
+### 模块化设计
+
+采用模块化架构便于扩展:
+
+```rust
+// 扫描模块示例
+pub struct VulnerabilityScanner {
+    config: Config,
+    cve_database: HashMap<String, CveInfo>,
+}
+```
+
+## 📚 使用场景
+
+### 内网渗透
+
 ```bash
-# Specify output directory and format
-rscan discovery -t 192.168.1.0/24 --output ./my-reports --format html
+# 1. 快速资产发现
+rscan --host 192.168.1.0/24 --fast
 
-# Verbose output
-rscan -vv discovery -t 192.168.1.0/24
+# 2. 重点目标深度扫描
+rscan --host 192.168.1.100 -m all
 
-# Quiet mode
-rscan -q discovery -t 192.168.1.0/24
+# 3. 服务爆破
+rscan --host 192.168.1.100 -m ssh -w passwords.txt
 ```
 
-#### Performance Tuning
+### 外网测试
+
 ```bash
-# Increase thread count for faster scanning
-rscan --threads 200 port-scan -t 192.168.1.0/24
+# 隐蔽扫描
+rscan --host target.com --stealth -p 80,443,22
 
-# Adjust timeout and rate limiting
-rscan --timeout 60 --rate-limit 50 discovery -t 192.168.1.0/24
+# Web 应用测试
+rscan --host target.com -m web --stealth
 ```
 
-#### Evasion Configuration
+### 安全评估
+
 ```bash
-# Enable stealth mode with custom timing
-rscan web-scan -t http://target.com --enable-evasion --timing 1
+# 漏洞扫描
+rscan --host 192.168.1.0/24 -m vuln
 
-# Configure proxy chain in config.toml
-[evasion]
-enabled = true
-timing_template = 2
-http_proxy = "http://proxy1.example.com:8080"
-socks_proxy = "socks5://proxy2.example.com:1080"
-use_tor = true
-generate_decoy_traffic = true
-
-# Timing templates:
-# 1 = Paranoid (5-15s delays, max stealth)
-# 2 = Sneaky (2-8s delays, high stealth)
-# 3 = Polite (1-3s delays, moderate stealth)
-# 4 = Normal (0.5-1.5s delays, low stealth)
-# 5 = Aggressive (0.1-0.5s delays, minimal stealth)
+# 基础安全检查
+rscan --host 192.168.1.0/24 -m vuln
 ```
 
-## 📁 Project Structure
+## 🤝 贡献指南
 
-```
-rscan/
-├── src/
-│   ├── main.rs              # Main application entry point
-│   ├── lib.rs               # Library root with common types
-│   ├── cli.rs               # Command-line interface
-│   ├── config.rs            # Configuration management
-│   ├── discovery.rs         # Network discovery and port scanning
-│   ├── brute_force.rs       # Authentication brute force attacks
-│   ├── web_scan.rs          # Web application scanning
-│   ├── vuln_scan.rs         # Vulnerability detection
-│   ├── exploit.rs           # Exploitation capabilities
-│   ├── reporting.rs         # Report generation
-│   ├── utils.rs             # Utility functions
-│   └── error.rs             # Error handling
-├── assets/
-│   └── report.css           # CSS styles for HTML reports
-├── wordlists/
-│   ├── usernames.txt        # Default username wordlist
-│   └── passwords.txt        # Default password wordlist
-├── config.toml              # Default configuration file
-├── Cargo.toml               # Rust project configuration
-└── README.md                # This file
-```
+欢迎提交 Issue 和 Pull Request！
 
-## ⚙️ Configuration
+1. Fork 本项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
-Rscan uses a TOML configuration file for customizing scan parameters. The default configuration file `config.toml` includes:
+## 📄 许可证
 
-- **Scan settings**: threads, timeouts, rate limiting
-- **Discovery options**: ping timeouts, port lists
-- **Brute force parameters**: attempt limits, delays
-- **Web scan configuration**: redirects, SSL verification
-- **Exploitation settings**: payload timeouts, reverse shell config
-- **Reporting options**: output formats, compression
-- **Wordlist paths**: custom username/password lists
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 🔧 Dependencies
+## 🙏 致谢
 
-Key Rust crates used in this project:
+感谢所有为本项目做出贡献的开发者和安全研究人员。
 
-- **tokio**: Async runtime for concurrent operations
-- **clap**: Command-line argument parsing
-- **reqwest**: HTTP client for web scanning
-- **ssh2**: SSH client for brute force and command execution
-- **mysql_async**, **tokio-postgres**, **redis**, **tiberius**: Database clients
-- **serde**: Serialization for configuration and reporting
-- **surge-ping**: ICMP ping implementation
-- **scraper**: HTML parsing for web scanning
+## 📞 联系方式
 
-## 🛡️ Security Considerations
-
-1. **Authorization**: Always obtain explicit written permission before scanning
-2. **Rate Limiting**: Use appropriate delays to avoid overwhelming target systems
-3. **Logging**: All activities are logged for audit purposes
-4. **Exploitation**: Exploitation features are disabled by default and should only be enabled in controlled environments
-5. **Network Impact**: Be mindful of network bandwidth and system resources
-
-## 🤝 Contributing
-
-Contributions are welcome! Please ensure that any contributions:
-
-1. Follow Rust best practices and coding standards
-2. Include appropriate tests
-3. Update documentation as needed
-4. Maintain the ethical use focus of the project
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## ⚖️ Legal Notice
-
-This tool is provided for educational and authorized testing purposes only. The authors and contributors are not responsible for any misuse or damage caused by this tool. Users are solely responsible for ensuring they have proper authorization before using this tool on any network or system.
-
-## 🔗 Resources
-
-- [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)
-- [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
-- [Penetration Testing Execution Standard](http://www.pentest-standard.org/)
+- 项目主页: [GitHub Repository](https://github.com/SantaVp3))
+- 问题反馈: [Issues] (https://github.com/SantaVp3rscan/issues)
+- 安全漏洞: vpsanta3@gmail.com
 
 ---
 
-**Remember: With great power comes great responsibility. Use this tool ethically and legally.**
+**⚠️ 再次提醒：本工具仅供授权的安全测试使用，请遵守当地法律法规！**

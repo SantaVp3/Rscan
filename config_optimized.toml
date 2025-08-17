@@ -1,0 +1,151 @@
+# Rscan 优化配置文件
+# 此配置文件展示了针对性能优化的推荐设置
+
+[scan]
+# 优化的线程配置 - 根据CPU核心数调整
+threads = 16
+# 减少超时时间以提高扫描速度
+timeout = 3000
+# 适中的速率限制，平衡速度和稳定性
+rate_limit = 1000
+# 增加重试次数以提高可靠性
+retries = 2
+# 使用更现代的用户代理
+user_agent = "Mozilla/5.0 (compatible; Rscan/1.0; +https://github.com/SantaVp3/Rscan)"
+
+[discovery]
+# 优化的发现配置
+ping_timeout = 1000
+tcp_timeout = 2000
+udp_timeout = 1500
+# 扫描常用端口以提高效率
+common_ports = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 993, 995, 1723, 3306, 3389, 5432, 5900, 8080]
+top_ports = 1000
+# 启用并行发现
+parallel_discovery = true
+# 使用混合策略获得最佳结果
+strategy = "hybrid"
+
+[brute_force]
+# 保守的暴力破解设置
+max_attempts = 3
+delay_between_attempts = 1000
+connection_timeout = 5000
+# 只启用常见服务以减少噪音
+enabled_services = ["ssh", "ftp", "mysql", "postgres"]
+# 使用并行连接提高速度
+parallel_connections = 5
+
+[web_scan]
+# Web扫描优化
+max_redirects = 3
+connection_timeout = 10000
+read_timeout = 15000
+ssl_verify = false
+# 启用并行请求
+parallel_requests = 10
+# 自定义头部以避免检测
+custom_headers = {
+    "Accept" = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language" = "en-US,en;q=0.5",
+    "Accept-Encoding" = "gzip, deflate",
+    "DNT" = "1",
+    "Connection" = "keep-alive",
+    "Upgrade-Insecure-Requests" = "1"
+}
+
+[exploit]
+# 安全的漏洞利用设置
+safe_mode = true
+max_payload_size = 1024
+connection_timeout = 10000
+# 启用详细日志以便调试
+verbose_logging = true
+
+[reporting]
+# 优化的报告配置
+formats = ["json", "html"]
+output_dir = "./reports"
+include_raw_data = false
+# 启用压缩以节省空间
+compress_reports = true
+# 生成摘要报告
+generate_summary = true
+
+[wordlists]
+# 使用相对路径的词典文件
+usernames = "./wordlists/usernames.txt"
+passwords = "./wordlists/passwords.txt"
+directories = "./wordlists/directories.txt"
+files = "./wordlists/files.txt"
+
+[advanced]
+# 高级性能设置
+debug_mode = false
+log_level = "info"
+# 启用性能监控
+performance_monitoring = true
+# 内存使用限制 (MB)
+memory_limit = 512
+# DNS缓存设置
+dns_cache_size = 1000
+dns_cache_ttl = 300
+# 连接池设置
+connection_pool_size = 50
+connection_pool_timeout = 30
+
+[logging]
+# 日志配置
+level = "info"
+file = "./logs/rscan.log"
+# 启用日志轮转
+rotate = true
+max_size = "10MB"
+max_files = 5
+
+[performance]
+# 性能优化设置
+# 启用缓存
+enable_caching = true
+cache_size = 10000
+cache_ttl = 3600
+# 批处理设置
+batch_size = 100
+batch_timeout = 1000
+# 对象池设置
+object_pool_size = 50
+# 速率限制器设置
+max_concurrent_requests = 100
+requests_per_second = 50.0
+
+[network]
+# 网络接口配置
+interface = "auto"
+# 启用IPv6支持
+ipv6_enabled = true
+# 源端口范围
+source_port_range = "32768-65535"
+# 套接字缓冲区大小
+socket_buffer_size = 65536
+
+[evasion]
+# 规避技术配置
+enabled = false
+# 时间模板 (0-5, 0最慢，5最快)
+timing_template = 3
+# 随机化设置
+randomize_hosts = true
+randomize_ports = true
+# 分片设置
+fragment_packets = false
+# 诱饵流量
+generate_decoy_traffic = false
+decoy_count = 3
+# 代理设置
+use_tor = false
+http_proxy = ""
+socks_proxy = ""
+# 源IP欺骗
+spoof_source_ip = false
+# 用户代理轮换
+rotate_user_agents = true
