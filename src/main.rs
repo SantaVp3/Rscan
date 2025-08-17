@@ -234,14 +234,113 @@ async fn execute_web_scan(
 ) -> Result<()> {
     display.print_section_header("🌐 WEB APPLICATION SCAN");
 
-    let _web_scanner = rscan::web_scan::WebScanner::new(config.clone());
-    
-    for target in targets {
-        display.print_info(&format!("Scanning {}", target));
-        display.print_success("Web scan placeholder - implement actual scanning logic");
+    let mut web_scanner = rscan::web_scan::WebScanner::new(config.clone())?;
+
+    // 加载所有模板
+    display.print_info("Loading security templates...");
+    match web_scanner.load_templates_from_directory("templates") {
+        Ok(loaded_count) => {
+            display.print_info(&format!("Successfully loaded {} templates from directory", loaded_count));
+        }
+        Err(e) => {
+            display.print_warning(&format!("Failed to load templates from directory: {}", e));
+            // 如果目录加载失败，尝试加载默认模板作为备选
+            display.print_info("Attempting to load default templates as fallback...");
+            if let Err(e) = web_scanner.load_template("templates/basic-info-disclosure.yaml") {
+                display.print_warning(&format!("Failed to load basic template: {}", e));
+            }
+            if let Err(e) = web_scanner.load_template("templates/advanced-web-scan.yaml") {
+                display.print_warning(&format!("Failed to load advanced template: {}", e));
+            }
+        }
     }
 
-    display.print_success("Web scan completed");
+    let template_count = web_scanner.get_loaded_templates_count();
+    display.print_info(&format!("Loaded {} security templates", template_count));
+
+    for target in targets {
+        display.print_info(&format!("🎯 Scanning {}", target));
+        // 模板扫描（并行+流式输出）
+        if template_count > 0 {
+            display.print_info(&format!("🔍 Running parallel template scan on {} ({} templates)", target, template_count));
+
+            // 使用并行扫描，设置合理的并发数
+            let max_concurrent = if template_count > 100 { 50 } else { template_count.min(20) };
+
+            let start_time = std::time::Instant::now();
+            match web_scanner.scan_with_templates(target, None, Some(max_concurrent)).await {
+                Ok(results) => {
+                    let scan_duration = start_time.elapsed();
+                    let final_matched_count = results.iter().filter(|r| r.matched).count();
+
+                    // 显示所有匹配的结果
+                    for result in &results {
+                        if result.matched {
+                            display.print_warning(&format!("🎯 发现漏洞: {} (模板: {})",
+                                result.template_id, result.template_id));
+                            for matcher in &result.matched_matchers {
+                                display.print_info(&format!("    - 匹配器: {}", matcher));
+                            }
+                        }
+                    }
+
+                    if final_matched_count > 0 {
+                        display.print_warning(&format!("⚠️  总计发现 {} 个安全问题 (耗时: {:.2}s, 并发: {})",
+                            final_matched_count, scan_duration.as_secs_f64(), max_concurrent));
+                    } else {
+                        display.print_success(&format!("✅ No security issues detected by templates (耗时: {:.2}s, 并发: {})",
+                            scan_duration.as_secs_f64(), max_concurrent));
+                    }
+                }
+                Err(e) => {
+                    display.print_warning(&format!("❌ Parallel template scan failed: {}", e));
+                }
+            }
+        }
+
+        // DSL表达式扫描
+        display.print_info(&format!("🧮 Running DSL security checks on {}", target));
+        let dsl_expressions = vec![
+            "status_code == 200".to_string(),
+            "len(body) > 100".to_string(),
+            "contains(to_lower(headers), 'server')".to_string(),
+            "contains(to_lower(body), 'admin') || contains(to_lower(body), 'login')".to_string(),
+            "contains(to_lower(body), 'error') || contains(to_lower(body), 'exception')".to_string(),
+            "!contains(to_lower(headers), 'x-frame-options')".to_string(),
+            "!contains(to_lower(headers), 'x-xss-protection')".to_string(),
+        ];
+
+        match web_scanner.scan_with_dsl(target, &dsl_expressions).await {
+            Ok(results) => {
+                let descriptions = vec![
+                    "Successful response",
+                    "Non-empty content",
+                    "Server header present",
+                    "Admin/login content detected",
+                    "Error information disclosure",
+                    "Missing X-Frame-Options header",
+                    "Missing X-XSS-Protection header",
+                ];
+
+                for (i, (result, desc)) in results.iter().zip(descriptions.iter()).enumerate() {
+                    if *result {
+                        if i >= 3 { // 安全问题
+                            display.print_warning(&format!("  ⚠️  {}", desc));
+                        } else { // 正常信息
+                            display.print_info(&format!("  ✅ {}", desc));
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                display.print_warning(&format!("❌ DSL scan failed: {}", e));
+            }
+        }
+
+        println!(); // 分隔不同目标的输出
+    }
+
+    display.print_success("🎉 Web application scan completed");
     Ok(())
 }
 

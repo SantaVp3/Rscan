@@ -21,6 +21,9 @@ pub mod evasion;
 pub mod display;
 pub mod utils;
 pub mod error;
+pub mod nuclei_dsl;
+pub mod template;
+pub mod template_engine;
 
 pub use error::{Result, ScanError};
 

@@ -15,7 +15,10 @@ pub struct NetworkDiscovery {
     ping_client: Option<Client>,
 }
 
+
+//网络发现类
 impl NetworkDiscovery {
+    //创建一个网络发现对象
     pub fn new(config: Config) -> Result<Self> {
         let ping_client = match Client::new(&PingConfig::default()) {
             Ok(client) => Some(client),
@@ -24,17 +27,17 @@ impl NetworkDiscovery {
                 None
             }
         };
-
+    
         Ok(Self {
             config,
             ping_client,
         })
     }
-
+    //对指定IP段进行存活扫描
     /// Discover live hosts in the given IP range
     pub async fn discover_hosts(&self, targets: &[String]) -> Result<Vec<IpAddr>> {
         let mut live_hosts = Vec::new();
-        
+        //
         for target in targets {
             let ips = self.parse_target(target)?;
             

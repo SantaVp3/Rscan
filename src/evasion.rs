@@ -22,6 +22,7 @@ use tokio::time::sleep;
 use url::Url;
 
 /// Main evasion engine that coordinates all stealth techniques
+#[derive(Clone)]
 pub struct EvasionEngine {
     config: Config,
     rng: Arc<RwLock<Rng>>,
@@ -59,6 +60,7 @@ pub struct TimingProfile {
 }
 
 /// Traffic mixer for generating decoy traffic and mimicking normal user behavior
+#[derive(Clone)]
 pub struct TrafficMixer {
     decoy_targets: Vec<String>,
     normal_patterns: Vec<TrafficPattern>,
@@ -226,18 +228,19 @@ impl EvasionEngine {
 
     /// Calculate random delay with jitter
     pub async fn random_delay(&self) {
-        let mut rng = self.rng.write();
-        let base_delay = rng.u64(
-            self.timing_profile.min_delay.as_millis() as u64
-                ..=self.timing_profile.max_delay.as_millis() as u64
-        );
-        
-        // Apply jitter
-        let jitter = (base_delay as f64 * self.timing_profile.jitter_factor * (rng.f64() - 0.5)) as u64;
-        let final_delay = Duration::from_millis(base_delay.saturating_add_signed(jitter as i64));
-        
+        let final_delay = {
+            let mut rng = self.rng.write();
+            let base_delay = rng.u64(
+                self.timing_profile.min_delay.as_millis() as u64
+                    ..=self.timing_profile.max_delay.as_millis() as u64
+            );
+
+            // Apply jitter
+            let jitter = (base_delay as f64 * self.timing_profile.jitter_factor * (rng.f64() - 0.5)) as u64;
+            Duration::from_millis(base_delay.saturating_add_signed(jitter as i64))
+        }; // Lock is automatically dropped here
+
         debug!("Applying evasion delay: {:?}", final_delay);
-        drop(rng); // Release lock before sleeping
         sleep(final_delay).await;
     }
 
