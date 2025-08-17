@@ -1,6 +1,7 @@
 use crate::{Result, ScanError};
 use crate::types::{Target, Port, Protocol, PortState, Service};
 use crate::config::Config;
+use crate::platform;
 use futures::stream::{self, StreamExt};
 use log::{debug, info};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};

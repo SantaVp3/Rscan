@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::{Result, ScanError};
 use crate::config::Config;
 use crate::evasion::EvasionEngine;

@@ -211,8 +211,8 @@ delay = 100
 提供基础的概念验证框架:
 
 ```bash
-# 注意: PoC功能仍在开发中
-rscan --host 192.168.1.100 -m vuln
+# 注意: 已兼容绝大部分Nuclei模板 可直接使用现有模板并放置在当前目录下的templates文件夹下即可\
+rscan.exe web-scan --target http://127.0.0.1:8080 
 ```
 
 ### 报告生成

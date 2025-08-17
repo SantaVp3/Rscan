@@ -24,6 +24,7 @@ pub mod error;
 pub mod nuclei_dsl;
 pub mod template;
 pub mod template_engine;
+pub mod platform;
 
 pub use error::{Result, ScanError};
 

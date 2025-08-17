@@ -299,14 +299,6 @@ async fn execute_web_scan(
         }
         Err(e) => {
             display.print_warning(&format!("Failed to load templates from directory: {}", e));
-            // 如果目录加载失败，尝试加载默认模板作为备选
-            display.print_info("Attempting to load default templates as fallback...");
-            if let Err(e) = web_scanner.load_template("templates/basic-info-disclosure.yaml") {
-                display.print_warning(&format!("Failed to load basic template: {}", e));
-            }
-            if let Err(e) = web_scanner.load_template("templates/advanced-web-scan.yaml") {
-                display.print_warning(&format!("Failed to load advanced template: {}", e));
-            }
         }
     }
 
@@ -353,44 +345,6 @@ async fn execute_web_scan(
             }
         }
 
-        // DSL表达式扫描
-        display.print_info(&format!("🧮 Running DSL security checks on {}", target));
-        let dsl_expressions = vec![
-            "status_code == 200".to_string(),
-            "len(body) > 100".to_string(),
-            "contains(to_lower(headers), 'server')".to_string(),
-            "contains(to_lower(body), 'admin') || contains(to_lower(body), 'login')".to_string(),
-            "contains(to_lower(body), 'error') || contains(to_lower(body), 'exception')".to_string(),
-            "!contains(to_lower(headers), 'x-frame-options')".to_string(),
-            "!contains(to_lower(headers), 'x-xss-protection')".to_string(),
-        ];
-
-        match web_scanner.scan_with_dsl(target, &dsl_expressions).await {
-            Ok(results) => {
-                let descriptions = vec![
-                    "Successful response",
-                    "Non-empty content",
-                    "Server header present",
-                    "Admin/login content detected",
-                    "Error information disclosure",
-                    "Missing X-Frame-Options header",
-                    "Missing X-XSS-Protection header",
-                ];
-
-                for (i, (result, desc)) in results.iter().zip(descriptions.iter()).enumerate() {
-                    if *result {
-                        if i >= 3 { // 安全问题
-                            display.print_warning(&format!("  ⚠️  {}", desc));
-                        } else { // 正常信息
-                            display.print_info(&format!("  ✅ {}", desc));
-                        }
-                    }
-                }
-            }
-            Err(e) => {
-                display.print_warning(&format!("❌ DSL scan failed: {}", e));
-            }
-        }
 
         println!(); // 分隔不同目标的输出
     }
